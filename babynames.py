@@ -14,6 +14,8 @@ import sys
 import re
 import argparse
 
+__author__ = "astephens91"
+
 """
 Define the extract_names() function below and change main()
 to call it.
@@ -41,12 +43,38 @@ Suggested milestones for incremental development:
 
 def extract_names(filename):
     """
-    Given a file name for baby.html, returns a list starting with the year string
+    Given a file name for baby.html, returns a list starting with the year
+    string
     followed by the name-rank strings in alphabetical order.
     ['2006', 'Aaliyah 91', Aaron 57', 'Abagail 895', ' ...]
+    - year:  `r'Popularity\sin\s(\d\d\d\d)`
+    - names: `r'<td>(\d+)</td><td>(\w+)</td><td>(\w+)</td>'`
     """
-    # +++your code here+++
-    return
+    """remove comments and any content found in the the comment area (strip_tags
+    only removes the actual tags)."""
+    with open(filename, "r") as file:
+        text = file.read()
+    # Extract year from html
+    year_match_obj = re.search(r'Popularity\sin\s(\d\d\d\d)', text)
+    year = year_match_obj.group(1)
+    # Populate list with initial value (year)
+    result = [year]
+
+    names_dict = {}
+    # Creates tuple list of rank, boy names, girl names
+    tuple_list = re.findall(r'<td>(\d+)</td><td>(\w+)</td><td>(\w+)</td>', text)
+    # Unpack tuple directly into variables this way
+    for rank, boy, girl in tuple_list:
+        names_dict[boy] = rank
+        names_dict[girl] = rank
+    # Creates sorted list of all names
+    names_list = sorted(names_dict.keys())
+    for name in names_list:
+        result.append(name + " " + names_dict[name])
+
+    return result
+
+
 
 
 def create_parser():
@@ -55,7 +83,8 @@ def create_parser():
     parser.add_argument(
         '--summaryfile', help='creates a summary file', action='store_true')
     # The nargs option instructs the parser to expect 1 or more filenames.
-    # It will also expand wildcards just like the shell, e.g. 'baby*.html' will work.
+    # It will also expand wildcards just like the shell, e.g. 'baby*.html'
+    # will work.
     parser.add_argument('files', help='filename(s) to parse', nargs='+')
     return parser
 
@@ -68,14 +97,13 @@ def main():
         parser.print_usage()
         sys.exit(1)
 
-    file_list = args.files
-
-    # option flag
-    create_summary = args.summaryfile
-
-    # +++your code here+++
-    # For each filename, get the names, then either print the text output
-    # or write it to a summary file
+    for file in args.files:
+        result_string = "\n".join(extract_names(file))
+        if args.summaryfile:
+            with open(file + ".summary", "w") as f:
+                f.write(result_string)
+        else:
+            print(result_string)
 
 
 if __name__ == '__main__':
